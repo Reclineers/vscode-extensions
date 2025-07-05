@@ -1,0 +1,22 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "nuxt",
+    "nuxtjs",
+    "vue",
+    "vuejs",
+    "vscode",
+    "typescript",
+    "javascript",
+    "html",
+    "css",
+    "scss",
+    "sass",
+    "json",
+    "markdown"
+  ],
+  "ignoreWords": [],
+  "ignorePaths": [],
+  "ignoreRegExpList": []
+}
