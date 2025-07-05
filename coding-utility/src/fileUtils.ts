@@ -17,12 +17,10 @@ export function getLanguageFromExtension(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   const basename = path.basename(filePath);
 
-  // ファイル名全体でマッチング（例: Dockerfile, Makefile）
   if (LANGUAGE_MAP[basename]) {
     return LANGUAGE_MAP[basename];
   }
 
-  // 拡張子でマッチング
   return LANGUAGE_MAP[ext] || 'others';
 }
 
@@ -37,10 +35,10 @@ function shouldExclude(name: string, isDirectory: boolean): boolean {
     return EXCLUDED_DIRECTORIES.includes(name);
   }
 
-  // ファイルの場合
   for (const pattern of EXCLUDED_FILES) {
     if (pattern.includes('*')) {
-      const regex = new RegExp(pattern.replace('*', '.*'));
+      const regexPattern = pattern.replace(/\./g, '\\.').replace(/\*/g, '.*');
+      const regex = new RegExp(`^${regexPattern}$`);
       if (regex.test(name)) {
         return true;
       }
@@ -65,34 +63,42 @@ export async function getAllFiles(dirPath: string): Promise<FileInfo[]> {
    * @param currentPath 現在のパス
    */
   async function traverse(currentPath: string): Promise<void> {
-    const entries = await readdir(currentPath);
+    try {
+      const entries = await readdir(currentPath);
 
-    for (const entry of entries) {
-      const fullPath = path.join(currentPath, entry);
-      const stats = await stat(fullPath);
+      for (const entry of entries) {
+        const fullPath = path.join(currentPath, entry);
+        const stats = await stat(fullPath);
 
-      if (shouldExclude(entry, stats.isDirectory())) {
-        continue;
-      }
+        if (stats.isDirectory() && shouldExclude(entry, true)) {
+          continue;
+        }
 
-      if (stats.isDirectory()) {
-        await traverse(fullPath);
-      } else if (stats.isFile()) {
-        try {
-          const content = await readFile(fullPath, 'utf8');
-          const relativePath = path.relative(dirPath, fullPath);
-          const language = getLanguageFromExtension(fullPath);
+        if (stats.isFile() && shouldExclude(entry, false)) {
+          continue;
+        }
 
-          files.push({
-            absolutePath: fullPath,
-            relativePath,
-            content,
-            language
-          });
-        } catch (error) {
-          console.error(`ファイル読み込みエラー ${fullPath}:`, error);
+        if (stats.isDirectory()) {
+          await traverse(fullPath);
+        } else if (stats.isFile()) {
+          try {
+            const content = await readFile(fullPath, 'utf8');
+            const relativePath = path.relative(dirPath, fullPath);
+            const language = getLanguageFromExtension(fullPath);
+
+            files.push({
+              absolutePath: fullPath,
+              relativePath,
+              content,
+              language
+            });
+          } catch (error) {
+            // エラーは無視
+          }
         }
       }
+    } catch (error) {
+      // エラーは無視
     }
   }
 
@@ -127,25 +133,28 @@ export async function getDirectoryTree(dirPath: string): Promise<DirectoryEntry>
     }
 
     const children: DirectoryEntry[] = [];
-    const entries = await readdir(currentPath);
+    try {
+      const entries = await readdir(currentPath);
 
-    for (const entry of entries) {
-      if (shouldExclude(entry, true)) {
-        continue;
+      for (const entry of entries) {
+        const fullPath = path.join(currentPath, entry);
+        const entryStats = await stat(fullPath);
+
+        if (shouldExclude(entry, entryStats.isDirectory())) {
+          continue;
+        }
+
+        try {
+          const child = await buildTree(fullPath, entry);
+          children.push(child);
+        } catch (error) {
+          // エラーは無視
+        }
       }
-
-      const fullPath = path.join(currentPath, entry);
-      const childStats = await stat(fullPath);
-
-      if (shouldExclude(entry, childStats.isDirectory())) {
-        continue;
-      }
-
-      const child = await buildTree(fullPath, entry);
-      children.push(child);
+    } catch (error) {
+      // エラーは無視
     }
 
-    // ディレクトリを先に、ファイルを後に並べ、それぞれアルファベット順にソート
     children.sort((a, b) => {
       if (a.isDirectory === b.isDirectory) {
         return a.name.localeCompare(b.name);

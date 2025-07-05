@@ -52,7 +52,7 @@ export function combineFilesToMarkdown(files: FileInfo[], tree: DirectoryEntry, 
 
   // ファイルツリー
   chunks.push('## ファイルツリー\n');
-  chunks.push('```');
+  chunks.push('```plaintext');
   chunks.push(tree.name);
   if (tree.children && tree.children.length > 0) {
     tree.children.forEach((child, index) => {
