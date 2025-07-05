@@ -1,0 +1,70 @@
+{
+  "name": "coding-utility",
+  "version": "1.0.0",
+  "displayName": "Coding Utility",
+  "description": "コーディングに役立つユーティリティ",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "coding-utility.combineFiles",
+        "title": "選択したフォルダ内のファイルを結合",
+        "category": "Coding Utility"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "coding-utility.combineFiles",
+          "group": "7_modification"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "coding-utility.combineFiles"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "pnpm run package",
+    "compile": "webpack",
+    "watch": "webpack --watch",
+    "package": "webpack --mode production --devtool hidden-source-map",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "pnpm run compile-tests && pnpm run compile && pnpm run lint",
+    "lint": "eslint src --ext ts",
+    "test": "vscode-test"
+  },
+  "keywords": [],
+  "author": "kuroron96_96",
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.12.4",
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.0.10",
+    "@typescript-eslint/eslint-plugin": "^8.35.1",
+    "@typescript-eslint/parser": "^8.35.1",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "eslint": "^9.30.1",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "vscode": "^1.1.37",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Reclineers/vscode-extensions"
+  }
+}
